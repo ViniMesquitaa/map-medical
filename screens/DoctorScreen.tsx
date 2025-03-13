@@ -14,10 +14,9 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import axios from "axios";
-import { Ionicons } from "@expo/vector-icons"; // Para ícones
-import moment from "moment"; // Para formatar datas
+import { Ionicons } from "@expo/vector-icons"; 
+import moment from "moment"; 
 
-// Tipagem para a localização
 interface LocationType {
   coords: {
     latitude: number;
@@ -25,13 +24,11 @@ interface LocationType {
   };
 }
 
-// Tipagem para a localização do paciente
 interface PatientLocation {
   latitude: number;
   longitude: number;
 }
 
-// Tipagem para uma solicitação
 interface Request {
   id: string;
   emergencyType: string;
@@ -39,7 +36,6 @@ interface Request {
   timestamp: string;
 }
 
-// Tipagem para a resposta do backend
 interface BackendResponse {
   message: string;
   location?: {
@@ -48,18 +44,17 @@ interface BackendResponse {
   };
 }
 
-const BACKEND_URL = "http://localhost:3000"; // Substitua pelo IP do backend
+const BACKEND_URL = "http://localhost:3000"; 
 
 const DoctorScreen: React.FC = () => {
-  const [location, setLocation] = useState<LocationType | null>(null); // Localização do médico
-  const [patientLocation, setPatientLocation] = useState<PatientLocation | null>(null); // Localização do paciente
-  const [notificationPermission, setNotificationPermission] = useState<boolean>(false); // Permissão de notificação
-  const [modalVisible, setModalVisible] = useState<boolean>(false); // Visibilidade do modal
-  const [historyModalVisible, setHistoryModalVisible] = useState<boolean>(false); // Visibilidade do modal de histórico
-  const [loading, setLoading] = useState<boolean>(false); // Estado de carregamento
-  const [requests, setRequests] = useState<Request[]>([]); // Histórico de solicitações
+  const [location, setLocation] = useState<LocationType | null>(null); 
+  const [patientLocation, setPatientLocation] = useState<PatientLocation | null>(null); 
+  const [notificationPermission, setNotificationPermission] = useState<boolean>(false); 
+  const [modalVisible, setModalVisible] = useState<boolean>(false); 
+  const [historyModalVisible, setHistoryModalVisible] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false); 
+  const [requests, setRequests] = useState<Request[]>([]);
 
-  // Solicitar permissão de localização
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -73,24 +68,20 @@ const DoctorScreen: React.FC = () => {
     })();
   }, []);
 
-  // Configurar notificações push
   useEffect(() => {
     (async () => {
       const { status } = await Notifications.requestPermissionsAsync();
       setNotificationPermission(status === "granted");
 
-      // Ouvir notificações recebidas
       const subscription = Notifications.addNotificationReceivedListener(handleNotification);
-      return () => subscription.remove(); // Limpar o listener ao desmontar
+      return () => subscription.remove();
     })();
   }, []);
 
-  // Carregar histórico de solicitações
   useEffect(() => {
     fetchRequests();
   }, []);
 
-  // Função para buscar o histórico de solicitações
   const fetchRequests = async () => {
     try {
       const response = await axios.get<Request[]>(`${BACKEND_URL}/getRequests`);
@@ -101,9 +92,8 @@ const DoctorScreen: React.FC = () => {
     }
   };
 
-  // Função para lidar com notificações recebidas
   const handleNotification = (notification: Notifications.Notification) => {
-    if (!notificationPermission) return; // Ignorar se as notificações estiverem desativadas
+    if (!notificationPermission) return;
 
     const { latitude, longitude, requestId, address } = notification.request.content.data as {
       latitude: string;
@@ -112,7 +102,6 @@ const DoctorScreen: React.FC = () => {
       address: string;
     };
 
-    // Exibir alerta para o médico aceitar ou recusar a solicitação
     Alert.alert(
       "Nova Emergência!",
       `Localização do paciente: ${address}. Deseja aceitar a solicitação?`,
@@ -130,7 +119,6 @@ const DoctorScreen: React.FC = () => {
     );
   };
 
-  // Função para responder à solicitação
   const respondToRequest = async (requestId: string, response: string) => {
     setLoading(true);
 
@@ -141,14 +129,12 @@ const DoctorScreen: React.FC = () => {
       });
 
       if (response === "accepted" && res.data.location) {
-        // Atualizar a localização do paciente no mapa
         setPatientLocation({
           latitude: parseFloat(res.data.location.latitude),
           longitude: parseFloat(res.data.location.longitude),
         });
       }
 
-      // Atualizar o histórico de solicitações
       fetchRequests();
       Alert.alert("Sucesso", res.data.message);
     } catch (error) {
@@ -159,22 +145,20 @@ const DoctorScreen: React.FC = () => {
     }
   };
 
-  // Função para remover uma solicitação
   const removeRequest = async (requestId: string) => {
     try {
       await axios.delete(`${BACKEND_URL}/removeRequest/${requestId}`);
-      fetchRequests(); // Atualizar o histórico
+      fetchRequests(); 
     } catch (error) {
       console.error("Erro ao remover solicitação:", error);
       Alert.alert("Erro", "Não foi possível remover a solicitação.");
     }
   };
 
-  // Função para remover todas as solicitações
   const removeAllRequests = async () => {
     try {
       await axios.delete(`${BACKEND_URL}/removeAllRequests`);
-      setRequests([]); // Limpar o histórico
+      setRequests([]); 
     } catch (error) {
       console.error("Erro ao remover todas as solicitações:", error);
       Alert.alert("Erro", "Não foi possível remover todas as solicitações.");
@@ -183,7 +167,6 @@ const DoctorScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Mapa */}
       {location && (
         <MapView
           style={styles.map}
@@ -200,7 +183,6 @@ const DoctorScreen: React.FC = () => {
             longitudeDelta: 0.0421,
           }}
         >
-          {/* Marcador do médico */}
           <Marker
             coordinate={{
               latitude: location.coords.latitude,
@@ -210,7 +192,6 @@ const DoctorScreen: React.FC = () => {
             pinColor="blue"
           />
 
-          {/* Marcador do paciente */}
           {patientLocation && (
             <Marker
               coordinate={{
@@ -224,7 +205,6 @@ const DoctorScreen: React.FC = () => {
         </MapView>
       )}
 
-      {/* Botão para abrir o modal de configuração */}
       <TouchableOpacity
         style={styles.configButton}
         onPress={() => setModalVisible(true)}
@@ -232,7 +212,6 @@ const DoctorScreen: React.FC = () => {
         <Ionicons name="settings" size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Modal de Configuração */}
       <Modal
         visible={modalVisible}
         transparent={true}
@@ -241,7 +220,7 @@ const DoctorScreen: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* Botão para fechar o modal */}
+
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setModalVisible(false)}
@@ -251,7 +230,7 @@ const DoctorScreen: React.FC = () => {
 
             <Text style={styles.modalTitle}>Configurações</Text>
 
-            {/* Permissão de Notificação */}
+
             <View style={styles.settingItem}>
               <Text style={styles.settingText}>Permitir Notificações Push</Text>
               <Switch
@@ -265,7 +244,6 @@ const DoctorScreen: React.FC = () => {
               />
             </View>
 
-            {/* Botão para abrir o histórico de solicitações */}
             <TouchableOpacity
               style={styles.historyButton}
               onPress={() => {
@@ -279,7 +257,6 @@ const DoctorScreen: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Modal de Histórico de Solicitações */}
       <Modal
         visible={historyModalVisible}
         transparent={true}
@@ -288,7 +265,6 @@ const DoctorScreen: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* Botão para fechar o modal */}
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setHistoryModalVisible(false)}
@@ -334,7 +310,6 @@ const DoctorScreen: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Indicador de carregamento */}
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#007bff" />

@@ -23,8 +23,8 @@ import axios from "axios";
 
 const { height } = Dimensions.get("window");
 
-const GOOGLE_MAPS_API_KEY = "CHAVE_API"; // Substitua pela sua chave da API do Google Maps
-const BACKEND_URL = "http://localhost:3000"; // Substitua pelo IP do seu backend
+const GOOGLE_MAPS_API_KEY = "CHAVE_API"; 
+const BACKEND_URL = "http://localhost:3000"; 
 
 const EMERGENCY_TYPES = [
   { id: "1", title: "Emergência Cardíaca", icon: "favorite" },
